@@ -1,5 +1,6 @@
 package com.example.cheery.simpletodo;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -18,6 +19,12 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
+
+    public final static int EDIT_REQUEST_CODE = 20; // the code that identifies EditActivity.java
+
+    // keys used for passing data between activities
+    public final static String ITEM_TEXT = "itemText";
+    public final static String ITEM_POSITION = "itemPosition";
 
     ArrayList<String> items;
     ArrayAdapter<String> itemsAdapter;
@@ -57,6 +64,32 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
         });
+
+        // regular click listener to go to edit page
+        lvItems.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Intent i =  new Intent(MainActivity.this, EditActivity.class);
+                String text = items.get(position);
+                i.putExtra(ITEM_TEXT, text);
+                i.putExtra(ITEM_POSITION, position);
+                startActivityForResult(i, EDIT_REQUEST_CODE);
+            }
+        });
+    }
+
+    // handle the results of EditActivity
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent i) {
+        super.onActivityResult(requestCode, resultCode, i);
+        if(resultCode == RESULT_OK && requestCode == EDIT_REQUEST_CODE) {
+            String newText = i.getStringExtra(ITEM_TEXT);
+            int position = i.getExtras().getInt(ITEM_POSITION);
+            items.set(position, newText);
+            itemsAdapter.notifyDataSetChanged();
+            writeItems();
+            Toast.makeText(this, "Item updated successfully", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private File getDataFile() {
